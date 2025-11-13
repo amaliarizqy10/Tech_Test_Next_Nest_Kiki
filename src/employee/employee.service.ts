@@ -193,6 +193,10 @@ export class EmployeeService {
           }
       }
   
-
+      async getReportEmployee() {
+        let data = await this.prisma.$queryRaw`SELECT schema_kiki.get_employee_data()` as any
+        let datas = data[0].get_employee_data
+        return datas
+    }
 
 }
