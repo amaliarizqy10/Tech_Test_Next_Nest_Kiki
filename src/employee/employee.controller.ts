@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Public } from 'src/shared/utils/constant';
 import { JoiPipe } from 'nestjs-joi';
@@ -23,14 +23,27 @@ export class EmployeeController {
 
     @Delete('/remove/:id')
     @ApiOperation({ summary: 'Delete a Employee' })
-    delete(@Param('id') id: string) {
-        return this.employeeService.delete(id);
+    delete(@Param('id') id: string, @Req() context: Request) {
+        const data = (context as any)?.user ?? '';
+        return this.employeeService.delete(id, data);
     }
 
     @Post('/create')
     @ApiOperation({ summary: 'Create a new Employee' })
     @ApiResponse({ status: 201, description: 'Employee created successfully.' })
-    create(@Body() dto: CreateEmployeeDto) {
-        return this.employeeService.create(dto);
+    create(@Body() dto: CreateEmployeeDto, @Req() context: Request) {
+        const data = (context as any)?.user ?? '';
+        return this.employeeService.create(dto, data);
+    }
+
+    @ApiBearerAuth()
+    @Patch('/update/:id')
+    async update(
+        @Param('id') id: string,
+        @Body() dto: CreateEmployeeDto,
+        @Req() context: Request
+    ) {
+        const data = (context as any)?.user ?? '';
+        return this.employeeService.update(id, dto, data)
     }
 }

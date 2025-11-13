@@ -1,6 +1,6 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { FindAllEmployeeDto } from './dto/employee.dto';
+import { CreateEmployeeDto, FindAllEmployeeDto } from './dto/employee.dto';
 
 @Injectable()
 export class EmployeeService {
@@ -87,7 +87,7 @@ export class EmployeeService {
         }
     }
 
-    async delete(id: string) {
+    async delete(id: string, context) {
         const response: {
             status: number;
             message: string;
@@ -103,7 +103,7 @@ export class EmployeeService {
             where: { id },
             data: { 
                 is_deleted: 1,
-                delete_by:'superadmin',
+                delete_by:context.username,
                 delete_date : new Date()
             },
         });
@@ -128,7 +128,7 @@ export class EmployeeService {
         return response;
     }
 
-    async create(data: { name: string; code: string }) {
+    async create(data: { name: string; code: string }, context) {
     const response: {
       status: number;
       message: string;
@@ -144,7 +144,7 @@ export class EmployeeService {
         data: {
           code_karyawan: data.code,
           nama_karyawan: data.name,
-          created_by: 'superadmin',
+          created_by: context.username,
         },
       });
       if (Object.keys(createdData).length < 1) {
@@ -167,6 +167,32 @@ export class EmployeeService {
 
     return response;
   }
+
+  async update(id : string, body: CreateEmployeeDto, context) {
+          try {
+              const { name, code } = body
+              let result = await this.prisma.karyawan.update({
+                  data: {
+                      nama_karyawan: name,
+                      code_karyawan: code,
+                      update_date: new Date(),
+                      update_by: context.username
+                  }, where: { id }
+              })
+              return {
+                  status: HttpStatus.OK,
+                  message: 'Successfully Update Company',
+                  data: {
+                      result: result,
+                  }
+              }
+          } catch (error) {
+              console.log(error)
+  
+              throw new InternalServerErrorException('Failed to update data company');
+          }
+      }
+  
 
 
 }
