@@ -47,4 +47,5 @@ export class CompanyController {
         const data = (context as any)?.user ?? '';
         return this.companyService.update(id, dto, data)
     }
+    
 }
