@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id           String         @id(map: "users_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama         String         @db.VarChar(100)
+  username     String         @unique @db.VarChar(16)
+  password     String
+  email        String         @unique @db.VarChar(50)
+  no_telp      String         @db.VarChar(16)
+  alamat       String
+  kota_id      String?        @db.Uuid
+  provinsi_id  String?        @db.Uuid
+  negara_id    String?        @db.Uuid
+  karyawan_id  String         @db.Uuid
+  created_by   String         @db.VarChar(16)
+  created_date DateTime       @default(now()) @db.Timestamp(6)
+  update_by    String?        @db.VarChar(16)
+  update_date  DateTime?      @db.Timestamp(6)
+  delete_by    String?        @db.VarChar(16)
+  delete_date  DateTime?      @db.Timestamp(6)
+  is_deleted   Int            @default(0)
+  user_company user_company[]
+  user_role    user_role[]
+  karyawan     karyawan       @relation(fields: [karyawan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_karyawan_fk")
+  kota         kota?          @relation(fields: [kota_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_kota_fk")
+  negara       negara?        @relation(fields: [negara_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_negara_fk")
+  provinsi     provinsi?      @relation(fields: [provinsi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_provinsi_fk")
+
+  @@map("users")
+}
+
+model company {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama_company String         @db.VarChar(100)
+  created_by   String         @db.VarChar(16)
+  created_date DateTime       @default(now()) @db.Timestamp(6)
+  update_by    String?        @db.VarChar(16)
+  update_date  DateTime?      @db.Timestamp(6)
+  delete_by    String?        @db.VarChar(16)
+  delete_date  DateTime?      @db.Timestamp(6)
+  is_deleted   Int            @default(0)
+  code_company String?        @db.VarChar(5)
+  user_company user_company[]
+  user_role    user_role[]
+}
+
+model karyawan {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama_karyawan String    @db.VarChar(100)
+  code_karyawan String?   @db.VarChar(5)
+  created_by    String?   @db.VarChar(16)
+  created_date  DateTime  @default(now()) @db.Timestamp(6)
+  update_by     String?   @db.VarChar(16)
+  update_date   DateTime? @db.Timestamp(6)
+  delete_by     String?   @db.VarChar(16)
+  delete_date   DateTime? @db.Timestamp(6)
+  is_deleted    Int       @default(0)
+  users         Users[]
+}
+
+model jabatan {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama_jabatan String         @db.VarChar
+  user_company user_company[]
+}
+
+model kota {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama_kota String  @db.VarChar
+  users     Users[]
+}
+
+model negara {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama_negara String  @db.VarChar
+  users       Users[]
+}
+
+model provinsi {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama_provinsi String  @db.VarChar
+  users         Users[]
+}
+
+model roles {
+  id        String      @id(map: "roles_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nama      String      @db.VarChar(50)
+  user_role user_role[]
+}
+
+model user_company {
+  id         String  @id(map: "user_to_company_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String  @db.Uuid
+  jabatan_id String  @db.Uuid
+  company_id String  @db.Uuid
+  company    company @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_company_company_fk")
+  jabatan    jabatan @relation(fields: [jabatan_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_company_jabatan_fk")
+  users      Users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_company_users_fk")
+}
+
+model user_role {
+  id         String  @id(map: "user_role_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String  @db.Uuid
+  role_id    String  @db.Uuid
+  company_id String  @db.Uuid
+  company    company @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_role_company_fk")
+  roles      roles   @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_role_roles_fk")
+  users      Users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_role_users_fk")
+}
